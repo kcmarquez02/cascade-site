@@ -233,9 +233,17 @@
   var wires=document.getElementById("wires"),nodesG=document.getElementById("nodes");
   var srcEnv=envelope(1.2);document.getElementById("srcEnv").appendChild(srcEnv);
   var nodeEnvs=[];
-  systems.forEach(function(s,i){var cx=s.x,rowY=s.y,y1=srcY+22,y2=rowY-4;
-    var p=document.createElementNS(SVGNS,"path");var my=(y1+y2)/2;
-    p.setAttribute("d","M "+srcX+" "+y1+" C "+srcX+" "+my+", "+cx+" "+(my-30)+", "+cx+" "+y2);
+  systems.forEach(function(s,i){var cx=s.x,rowY=s.y;
+    // Determine where this wire starts: from the box directly above (same column, previous row), else from source
+    var startX, startY;
+    var above=null;
+    for(var j=0;j<i;j++){if(systems[j].x===cx && systems[j].y<rowY){if(!above||systems[j].y>above.y)above=systems[j];}}
+    if(above){startX=cx;startY=above.y+boxH;}      // from bottom of box above
+    else{startX=srcX;startY=srcY+22;}               // row 1: from source
+    var y2=rowY-4;
+    var p=document.createElementNS(SVGNS,"path");
+    var my=(startY+y2)/2;
+    p.setAttribute("d","M "+startX+" "+startY+" C "+startX+" "+my+", "+cx+" "+my+", "+cx+" "+y2);
     p.setAttribute("fill","none");p.setAttribute("stroke","#29433C");p.setAttribute("stroke-width","1.6");wires.appendChild(p);
     var len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p._len=len;
     var box=document.createElementNS(SVGNS,"rect");box.setAttribute("x",cx-boxW/2);box.setAttribute("y",rowY);box.setAttribute("width",boxW);box.setAttribute("height",boxH);box.setAttribute("rx",9);box.setAttribute("class","node-box");nodesG.appendChild(box);
