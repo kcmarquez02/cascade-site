@@ -134,8 +134,8 @@
 
 <div class="wrap">
   <div class="hero">
-    <div class="eyebrow">Verdict propagation · email security</div>
-    <h1>The verdict changes. <span class="fade">Make it flow downstream.</span></h1>
+    <div class="eyebrow">Verdict propagation</div>
+    <h1>When the verdict changes, <span class="fade">make it flow downstream.</span></h1>
     <p class="lede">
       When a malicious email is caught and pulled, it has already copied itself into backups,
       archives, ticketing, shared mailboxes, and AI indexes — and every copy still reads as safe.
@@ -155,7 +155,7 @@
       <span class="stage-cap" id="stageCap">One email is delivered</span>
       <span class="stage-state" id="stageState">delivered</span>
     </div>
-    <svg id="svg" viewBox="0 0 900 420" width="100%" role="img" aria-label="An email is delivered; copies flow down into downstream systems; the verdict turns malicious; Cascade cascades the new verdict down to secure every copy.">
+    <svg id="svg" viewBox="0 0 900 420" width="100%" role="img" aria-label="One email is delivered; copies spread into downstream systems; it is flagged malicious; Cascade carries the verdict downstream.">
       <g id="wires"></g>
       <g id="source" transform="translate(450,44)"><g id="srcEnv"></g><text class="lbl-sm" x="0" y="42" text-anchor="middle" fill="#AFC3BE">SOURCE &middot; INBOX</text></g>
       <g id="nodes"></g>
@@ -239,7 +239,7 @@
     nodeEnvs.forEach(function(n){color(n.env,"#8AA6A0");n.box.setAttribute("stroke","#29433C");n.wire.style.strokeDashoffset=n.wire._len;n.wire.setAttribute("stroke","#29433C");n.tag.textContent="";n.tag.setAttribute("fill","#AFC3BE");n.env._mark.setAttribute("fill","transparent");});
     cap.textContent="One email is delivered";state.textContent="delivered";state.className="stage-state";}
   function run(){reset();
-    if(reduce){color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","rgba(63,176,174,0.6)");color(n.env,"#3FB0AE");n.box.setAttribute("stroke","rgba(63,176,174,0.5)");n.tag.textContent="secured";n.tag.setAttribute("fill","#8FEAE6");});cap.textContent="Cascade secures every copy";state.textContent="all copies secured";state.className="stage-state good";return;}
+    if(reduce){color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","rgba(63,176,174,0.6)");color(n.env,"#3FB0AE");n.box.setAttribute("stroke","rgba(63,176,174,0.5)");n.tag.textContent="secured";n.tag.setAttribute("fill","#8FEAE6");});cap.textContent="Cascade carries the verdict downstream";state.textContent="all copies secured";state.className="stage-state good";return;}
     nodeEnvs.forEach(function(n,i){T(function(){n.wire.style.transition="stroke-dashoffset .7s ease";n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","#3A5F58");n.tag.textContent="safe";},300+i*200);});
     var t2=300+systems.length*200+600;
     T(function(){cap.textContent="The verdict flips \u2014 but the copies don't";state.textContent="malicious \u2014 copies still trust it";state.className="stage-state danger";color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.tag.textContent="stale";n.tag.setAttribute("fill","#D9A876");n.wire.setAttribute("stroke","rgba(192,138,90,0.5)");});},t2);
