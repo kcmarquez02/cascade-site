@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cascade — the verdict flows downstream</title>
+<style>
+  :root {
+    --pool:      #3FB0AE;   /* turquoise plunge pool — current verdict */
+    --pool-lt:   #6FE0DC;   /* bright spray highlight */
+    --water:     #EAF6F5;   /* whitewater */
+    --stale:     #C08A5A;   /* stale = warm silted water */
+    --ink:       #0C1512;   /* deep forest-shadow base */
+    --paper:     #F1F6F4;
+    --muted:     #AFC3BE;
+    --hair:      #29433C;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+  body {
+    font-family: var(--sans); color: var(--paper); background: var(--ink);
+    line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; position: relative;
+  }
+
+  /* ===== real Durango photo, fixed behind everything ===== */
+  .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .scene .photo {
+    position: absolute; inset: 0;
+    background-image: url("durango.jpg");
+    background-size: cover; background-position: center top; background-repeat: no-repeat;
+  }
+  .scene .veil {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(12,21,18,0.30) 0%, rgba(12,21,18,0.20) 30%, rgba(12,21,18,0.55) 70%, rgba(12,21,18,0.88) 100%),
+      linear-gradient(90deg, rgba(12,21,18,0.72) 0%, rgba(12,21,18,0.45) 32%, rgba(12,21,18,0.08) 60%, rgba(12,21,18,0.0) 100%);
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 2; }
+
+  header { position: sticky; top: 0; z-index: 50; background: rgba(12,21,18,0.55); backdrop-filter: blur(12px); border-bottom: 1px solid var(--hair); }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+  .logo { font-family: var(--mono); font-size: 15px; letter-spacing: 0.04em; font-weight: 500; display: flex; align-items: center; gap: 11px; }
+  .logo .glyph { width: 16px; height: 16px; position: relative; display: inline-block; }
+  .logo .glyph span { position: absolute; left: 0; height: 2px; border-radius: 2px; }
+  .logo .glyph span:nth-child(1){ top: 1px; width:100%; background: var(--water); opacity:1; }
+  .logo .glyph span:nth-child(2){ top: 7px; width:70%; left:15%; background: var(--pool-lt); opacity:.9; }
+  .logo .glyph span:nth-child(3){ top: 13px; width:40%; left:30%; background: var(--pool); opacity:.8; }
+  .nav-cta { font-family: var(--mono); font-size: 13px; color: var(--paper); text-decoration: none; border: 1px solid var(--hair); padding: 8px 16px; border-radius: 6px; transition: border-color .2s, background .2s; }
+  .nav-cta:hover { border-color: var(--pool-lt); background: rgba(63,176,174,0.14); }
+
+  .hero { padding: 120px 0 90px; min-height: 88vh; display: flex; flex-direction: column; justify-content: center; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--pool-lt); margin-bottom: 28px; text-shadow: 0 1px 12px rgba(0,0,0,0.6); }
+  h1 { font-size: clamp(40px, 6.4vw, 72px); line-height: 1.01; letter-spacing: -0.02em; font-weight: 600; max-width: 15ch; margin-bottom: 28px; text-shadow: 0 2px 40px rgba(0,0,0,0.75); }
+  h1 .fade { color: var(--pool-lt); }
+  .lede { font-size: clamp(17px, 2vw, 21px); color: #E4EFEC; max-width: 50ch; margin-bottom: 40px; line-height: 1.56; text-shadow: 0 1px 22px rgba(0,0,0,0.8); }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .btn { font-family: var(--mono); font-size: 14px; text-decoration: none; padding: 14px 24px; border-radius: 7px; transition: all .2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; }
+  .btn-primary { background: var(--pool); color: #05201f; font-weight: 600; box-shadow: 0 4px 24px rgba(63,176,174,0.3); }
+  .btn-primary:hover { background: var(--pool-lt); transform: translateY(-1px); }
+  .btn-ghost { color: var(--paper); border: 1px solid rgba(255,255,255,0.35); background: rgba(12,21,18,0.35); backdrop-filter: blur(4px); }
+  .btn-ghost:hover { border-color: var(--pool-lt); }
+
+  /* content below hero sits on a solid deep panel so it's readable off the photo */
+  .content { background: linear-gradient(180deg, rgba(12,21,18,0.80) 0%, rgba(12,21,18,0.90) 6%, rgba(12,21,18,0.94) 16%, rgba(12,21,18,0.965) 40%, rgba(12,21,18,0.975) 100%); position: relative; z-index: 2; }
+
+  .stage { border: 1px solid var(--hair); border-radius: 16px; background: rgba(12,21,18,0.6); backdrop-filter: blur(6px); padding: 24px 30px 20px; position: relative; overflow: hidden; margin-top: 8px; }
+  .stage-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap:14px; }
+  .stage-cap { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .stage-state { font-family: var(--mono); font-size: 11px; letter-spacing: 0.03em; padding: 5px 12px; border-radius: 20px; border:1px solid var(--hair); color: var(--muted); transition: all .4s ease; white-space: nowrap; }
+  .stage-state.danger { color: #E7B98C; border-color: rgba(192,138,90,0.6); background: rgba(192,138,90,0.15); }
+  .stage-state.good { color: #8FEAE6; border-color: rgba(63,176,174,0.6); background: rgba(63,176,174,0.14); }
+
+  svg .lbl { font-family: var(--mono); font-size: 11px; fill: #CFE7E3; }
+  svg .lbl-sm { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; }
+  svg .node-box { fill: rgba(255,255,255,0.03); stroke: var(--hair); stroke-width: 1; transition: stroke .5s ease, fill .5s ease; }
+  .env-body, .env-flap { transition: fill .5s ease, stroke .5s ease; }
+
+  .stage-legend { display: flex; gap: 20px; align-items:center; margin-top: 12px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); flex-wrap: wrap; }
+  .stage-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot.stale { background: var(--stale); }
+  .dot.ok { background: var(--pool); }
+  .dot.sig { background: var(--water); }
+  .replay { font-family: var(--mono); font-size: 11px; color: var(--muted); background: none; border: 1px solid var(--hair); border-radius: 6px; padding: 5px 12px; cursor: pointer; transition: all .2s; margin-left:auto; }
+  .replay:hover { color: var(--paper); border-color: var(--muted); }
+
+  section { padding: 84px 0; border-top: 1px solid var(--hair); }
+  .sec-eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--pool-lt); margin-bottom: 20px; }
+  h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; letter-spacing: -0.01em; font-weight: 600; max-width: 20ch; margin-bottom: 24px; }
+  .prose { font-size: 17px; color: #DCEAE7; max-width: 60ch; line-height: 1.62; }
+  .prose + .prose { margin-top: 18px; }
+  .prose strong { color: var(--paper); font-weight: 600; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 12px; overflow: hidden; margin-top: 8px; }
+  .step { background: rgba(12,21,18,0.7); padding: 32px 26px; }
+  .step-n { font-family: var(--mono); font-size: 12px; color: var(--pool-lt); letter-spacing: 0.1em; margin-bottom: 18px; }
+  .step h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .step p { font-size: 14px; color: var(--muted); line-height: 1.55; }
+
+  .cta-band { text-align: center; }
+  .cta-band h2 { margin: 0 auto 20px; max-width: 24ch; }
+  .cta-band .prose { margin: 0 auto 36px; }
+  .form-row { display: flex; gap: 10px; justify-content: center; max-width: 460px; margin: 0 auto; flex-wrap: wrap; }
+  input[type=email] { flex: 1; min-width: 220px; font-family: var(--mono); font-size: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--hair); color: var(--paper); padding: 13px 16px; border-radius: 7px; transition: border-color .2s; }
+  input[type=email]:focus { outline: none; border-color: var(--pool); }
+  input[type=email]::placeholder { color: var(--muted); }
+  .form-note { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 16px; letter-spacing: 0.03em; }
+
+  footer { border-top: 1px solid var(--hair); padding: 40px 0; position: relative; z-index: 2; background: #0C1512; }
+  .foot { display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 16px; }
+  .foot a { color: var(--muted); text-decoration: none; }
+  .foot a:hover { color: var(--paper); }
+
+  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } .hero { padding: 90px 0 60px; min-height: 80vh;} .stage { padding: 18px 12px 16px; } .scene .photo{ background-position: 60% top; } }
+</style>
+</head>
+<body>
+
+<div class="scene" aria-hidden="true">
+  <div class="photo"></div>
+  <div class="veil"></div>
+</div>
+
+<header>
+  <div class="wrap bar">
+    <div class="logo"><span class="glyph"><span></span><span></span><span></span></span> CASCADE</div>
+    <a href="#access" class="nav-cta">Request access</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Verdict propagation · email security</div>
+    <h1>The verdict changes. <span class="fade">Make it flow downstream.</span></h1>
+    <p class="lede">
+      When a malicious email is caught and pulled, it has already copied itself into backups,
+      archives, ticketing, shared mailboxes, and AI indexes — and every copy still reads as safe.
+      Cascade carries the new verdict down to all of them, and proves it.
+    </p>
+    <div class="hero-actions">
+      <a href="#access" class="btn btn-primary">Request early access &rarr;</a>
+      <a href="#how" class="btn btn-ghost">See how it works</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+<div class="wrap">
+  <div class="stage" id="stage">
+    <div class="stage-top">
+      <span class="stage-cap" id="stageCap">One email is delivered</span>
+      <span class="stage-state" id="stageState">delivered</span>
+    </div>
+    <svg id="svg" viewBox="0 0 900 420" width="100%" role="img" aria-label="An email is delivered; copies flow down into downstream systems; the verdict turns malicious; Cascade cascades the new verdict down to secure every copy.">
+      <g id="wires"></g>
+      <g id="source" transform="translate(450,44)"><g id="srcEnv"></g><text class="lbl-sm" x="0" y="42" text-anchor="middle" fill="#AFC3BE">SOURCE &middot; INBOX</text></g>
+      <g id="nodes"></g>
+    </svg>
+    <div class="stage-legend">
+      <span><i class="dot stale"></i> stale verdict</span>
+      <span><i class="dot sig"></i> verdict cascading</span>
+      <span><i class="dot ok"></i> secured</span>
+      <button class="replay" id="replay">&#8635; replay</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section id="how">
+    <div class="sec-eyebrow">The gap</div>
+    <h2>Remediation stops at the inbox. The threat doesn't.</h2>
+    <p class="prose">Email security tools are good at catching a malicious message and pulling it &mdash; <strong>after</strong> delivery, once they've changed their mind. But delivery is also when a message multiplies. By the time the verdict flips, copies are sitting in systems the security tool has no reach into.</p>
+    <p class="prose">Those copies keep the <strong>old</strong> disposition. The backup restores a live threat. The archive hands it to an auditor. The AI assistant retrieves it as a trusted source. Nobody told them the verdict changed &mdash; because nothing was built to.</p>
+  </section>
+
+  <section>
+    <div class="sec-eyebrow">The approach</div>
+    <h2>A control plane for the changed verdict.</h2>
+    <p class="prose" style="margin-bottom:40px;">Cascade is vendor-neutral. It takes a verdict from whatever security stack produced it, finds every place the message went, and applies the strongest action each of those systems will accept &mdash; then records what it did.</p>
+    <div class="steps">
+      <div class="step"><div class="step-n">01 / MAP</div><h3>Find every copy</h3><p>Trace the message across mail, backup, archive, ticketing, file stores, and indexes &mdash; by identity, not by keyword.</p></div>
+      <div class="step"><div class="step-n">02 / PROPAGATE</div><h3>Carry the verdict</h3><p>Apply the strongest action each system accepts &mdash; remove, restrict, tag, or flag &mdash; reversibly, never destructively.</p></div>
+      <div class="step"><div class="step-n">03 / PROVE</div><h3>Show your work</h3><p>Produce a disposition record: what was found, what was done, and where &mdash; an answer for the audit, not a guess.</p></div>
+    </div>
+  </section>
+
+  <section class="cta-band" id="access">
+    <div class="sec-eyebrow" style="text-align:center;">Early access</div>
+    <h2>Built for the teams who own the aftermath.</h2>
+    <p class="prose">Cascade is in early development with design partners. If you run security for an organization &mdash; or for other organizations &mdash; and this problem is familiar, we'd like to talk.</p>
+    <form class="form-row" onsubmit="event.preventDefault(); this.querySelector('input').value=''; document.getElementById('formNote').textContent='Thanks — we\'ll be in touch.';">
+      <input type="email" placeholder="you@organization.com" required aria-label="Email address">
+      <button type="submit" class="btn btn-primary">Request access</button>
+    </form>
+    <div class="form-note" id="formNote">No newsletter. No spam. A real conversation.</div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <div class="logo"><span class="glyph"><span></span><span></span><span></span></span> CASCADE</div>
+    <div>&copy; 2026 Cascade Security &middot; cascadesecurity.io</div>
+    <div><a href="#access">Request access</a></div>
+  </div>
+</footer>
+</div>
+
+<script>
+(function(){
+  var SVGNS="http://www.w3.org/2000/svg";
+  var systems=[{name:"Backup snapshot",x:120},{name:"Compliance archive",x:290},{name:"PSA / ticketing",x:460},{name:"Shared mailbox",x:630},{name:"AI index",x:800}];
+  var srcX=450,srcY=44,rowY=300,boxW=150,boxH=66;
+  function envelope(s){s=s||1;var g=document.createElementNS(SVGNS,"g");var w=40*s,h=27*s;
+    var b=document.createElementNS(SVGNS,"rect");b.setAttribute("x",-w/2);b.setAttribute("y",-h/2);b.setAttribute("width",w);b.setAttribute("height",h);b.setAttribute("rx",3);b.setAttribute("class","env-body");b.setAttribute("fill","rgba(255,255,255,0.05)");b.setAttribute("stroke","#CFE7E3");b.setAttribute("stroke-width","1.5");g.appendChild(b);
+    var f=document.createElementNS(SVGNS,"path");f.setAttribute("d","M "+(-w/2)+" "+(-h/2)+" L 0 "+(h*0.18)+" L "+(w/2)+" "+(-h/2));f.setAttribute("class","env-flap");f.setAttribute("fill","none");f.setAttribute("stroke","#CFE7E3");f.setAttribute("stroke-width","1.5");f.setAttribute("stroke-linejoin","round");g.appendChild(f);
+    var m=document.createElementNS(SVGNS,"text");m.setAttribute("x",0);m.setAttribute("y",-h/2-6*s);m.setAttribute("text-anchor","middle");m.setAttribute("font-family","ui-monospace, monospace");m.setAttribute("font-size",13*s);m.setAttribute("fill","transparent");g.appendChild(m);
+    g._body=b;g._flap=f;g._mark=m;return g;}
+  function color(g,st){g._body.setAttribute("stroke",st);g._flap.setAttribute("stroke",st);}
+  var wires=document.getElementById("wires"),nodesG=document.getElementById("nodes");
+  var srcEnv=envelope(1.2);document.getElementById("srcEnv").appendChild(srcEnv);
+  var nodeEnvs=[];
+  systems.forEach(function(s,i){var cx=s.x,y1=srcY+22,y2=rowY-4;
+    var p=document.createElementNS(SVGNS,"path");var my=(y1+y2)/2;
+    p.setAttribute("d","M "+srcX+" "+y1+" C "+srcX+" "+my+", "+cx+" "+(my-30)+", "+cx+" "+y2);
+    p.setAttribute("fill","none");p.setAttribute("stroke","#29433C");p.setAttribute("stroke-width","1.6");wires.appendChild(p);
+    var len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p._len=len;
+    var box=document.createElementNS(SVGNS,"rect");box.setAttribute("x",cx-boxW/2);box.setAttribute("y",rowY);box.setAttribute("width",boxW);box.setAttribute("height",boxH);box.setAttribute("rx",9);box.setAttribute("class","node-box");nodesG.appendChild(box);
+    var eH=document.createElementNS(SVGNS,"g");eH.setAttribute("transform","translate("+cx+","+(rowY+22)+")");var e=envelope(0.62);eH.appendChild(e);nodesG.appendChild(eH);
+    var t=document.createElementNS(SVGNS,"text");t.setAttribute("x",cx);t.setAttribute("y",rowY+44);t.setAttribute("text-anchor","middle");t.setAttribute("class","lbl");t.textContent=s.name;nodesG.appendChild(t);
+    var tag=document.createElementNS(SVGNS,"text");tag.setAttribute("x",cx);tag.setAttribute("y",rowY+58);tag.setAttribute("text-anchor","middle");tag.setAttribute("class","lbl-sm");tag.setAttribute("fill","#AFC3BE");tag.textContent="";nodesG.appendChild(tag);
+    nodeEnvs.push({env:e,box:box,tag:tag,wire:p});});
+  var cap=document.getElementById("stageCap"),state=document.getElementById("stageState");
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;var timers=[];function T(fn,ms){timers.push(setTimeout(fn,ms));}function clearT(){timers.forEach(clearTimeout);timers=[];}
+  function reset(){clearT();color(srcEnv,"#CFE7E3");srcEnv._mark.setAttribute("fill","transparent");
+    nodeEnvs.forEach(function(n){color(n.env,"#8AA6A0");n.box.setAttribute("stroke","#29433C");n.wire.style.strokeDashoffset=n.wire._len;n.wire.setAttribute("stroke","#29433C");n.tag.textContent="";n.tag.setAttribute("fill","#AFC3BE");n.env._mark.setAttribute("fill","transparent");});
+    cap.textContent="One email is delivered";state.textContent="delivered";state.className="stage-state";}
+  function run(){reset();
+    if(reduce){color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","rgba(63,176,174,0.6)");color(n.env,"#3FB0AE");n.box.setAttribute("stroke","rgba(63,176,174,0.5)");n.tag.textContent="secured";n.tag.setAttribute("fill","#8FEAE6");});cap.textContent="Cascade secures every copy";state.textContent="all copies secured";state.className="stage-state good";return;}
+    nodeEnvs.forEach(function(n,i){T(function(){n.wire.style.transition="stroke-dashoffset .7s ease";n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","#3A5F58");n.tag.textContent="safe";},300+i*200);});
+    var t2=300+systems.length*200+600;
+    T(function(){cap.textContent="The verdict flips \u2014 but the copies don't";state.textContent="malicious \u2014 copies still trust it";state.className="stage-state danger";color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.tag.textContent="stale";n.tag.setAttribute("fill","#D9A876");n.wire.setAttribute("stroke","rgba(192,138,90,0.5)");});},t2);
+    var base=t2+1200;
+    T(function(){cap.textContent="Cascade carries the verdict downstream";state.textContent="cascading\u2026";state.className="stage-state";},base-150);
+    nodeEnvs.forEach(function(n,i){
+      T(function(){n.wire.setAttribute("stroke","#EAF6F5");n.wire.style.filter="drop-shadow(0 0 4px rgba(111,224,220,0.8))";n.box.setAttribute("stroke","rgba(63,176,174,0.55)");},base+i*340);
+      T(function(){color(n.env,"#3FB0AE");n.wire.setAttribute("stroke","rgba(63,176,174,0.5)");n.wire.style.filter="none";n.box.setAttribute("stroke","rgba(63,176,174,0.5)");n.box.setAttribute("fill","rgba(63,176,174,0.06)");n.tag.textContent="secured";n.tag.setAttribute("fill","#8FEAE6");n.env._mark.setAttribute("fill","#8FEAE6");n.env._mark.textContent="\u2713";},base+i*340+240);});
+    T(function(){cap.textContent="Every copy now carries the current verdict \u2014 with a record.";state.textContent="all copies secured";state.className="stage-state good";},base+systems.length*340+400);}
+  var played=false;
+  if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&!played){played=true;T(run,400);io.disconnect();}});},{threshold:0.35});io.observe(document.getElementById("stage"));}else run();
+  document.getElementById("replay").addEventListener("click",run);reset();
+})();
+</script>
+</body>
+</html>
