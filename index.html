@@ -155,7 +155,7 @@
       <span class="stage-cap" id="stageCap">One email is delivered</span>
       <span class="stage-state" id="stageState">delivered</span>
     </div>
-    <svg id="svg" viewBox="0 0 900 420" width="100%" role="img" aria-label="One email is delivered; copies spread into downstream systems; it is flagged malicious; Cascade carries the verdict downstream.">
+    <svg id="svg" viewBox="0 0 900 560" width="100%" role="img" aria-label="One email is delivered; copies spread into nine downstream systems; it is flagged malicious; Cascade carries the verdict downstream to every copy.">
       <g id="wires"></g>
       <g id="source" transform="translate(450,44)"><g id="srcEnv"></g><text class="lbl-sm" x="0" y="42" text-anchor="middle" fill="#AFC3BE">SOURCE &middot; INBOX</text></g>
       <g id="nodes"></g>
@@ -192,11 +192,11 @@
     <div class="sec-eyebrow" style="text-align:center;">Early access</div>
     <h2>Built for the teams who own the aftermath.</h2>
     <p class="prose">Cascade is in early development with design partners. If you run security for an organization &mdash; or for other organizations &mdash; and this problem is familiar, we'd like to talk.</p>
-    <form class="form-row" onsubmit="event.preventDefault(); this.querySelector('input').value=''; document.getElementById('formNote').textContent='Thanks — we\'ll be in touch.';">
-      <input type="email" placeholder="you@organization.com" required aria-label="Email address">
+    <form class="form-row" id="accessForm" action="https://formspree.io/f/xbgrnaql" method="POST">
+      <input type="email" name="email" placeholder="you@organization.com" required aria-label="Email address">
       <button type="submit" class="btn btn-primary">Request access</button>
     </form>
-    <div class="form-note" id="formNote">No newsletter. No spam. A real conversation.</div>
+    <div class="form-note" id="formNote">We read every request.</div>
   </section>
 </div>
 
@@ -212,8 +212,18 @@
 <script>
 (function(){
   var SVGNS="http://www.w3.org/2000/svg";
-  var systems=[{name:"Backup snapshot",x:120},{name:"Compliance archive",x:290},{name:"PSA / ticketing",x:460},{name:"Shared mailbox",x:630},{name:"AI index",x:800}];
-  var srcX=450,srcY=44,rowY=300,boxW=150,boxH=66;
+  var systems=[
+    {name:"Other recipient inboxes",x:170,y:250},
+    {name:"Deleted & recoverable",x:450,y:250},
+    {name:"Archive & journal",x:730,y:250},
+    {name:"SaaS backup",x:170,y:370},
+    {name:"Quarantine",x:450,y:370},
+    {name:"PSA / ticketing",x:730,y:370},
+    {name:"Cloud file storage",x:170,y:490},
+    {name:"AI assistant index",x:450,y:490},
+    {name:"Workflow & chat",x:730,y:490}
+  ];
+  var srcX=450,srcY=44,boxW=210,boxH=70;
   function envelope(s){s=s||1;var g=document.createElementNS(SVGNS,"g");var w=40*s,h=27*s;
     var b=document.createElementNS(SVGNS,"rect");b.setAttribute("x",-w/2);b.setAttribute("y",-h/2);b.setAttribute("width",w);b.setAttribute("height",h);b.setAttribute("rx",3);b.setAttribute("class","env-body");b.setAttribute("fill","rgba(255,255,255,0.05)");b.setAttribute("stroke","#CFE7E3");b.setAttribute("stroke-width","1.5");g.appendChild(b);
     var f=document.createElementNS(SVGNS,"path");f.setAttribute("d","M "+(-w/2)+" "+(-h/2)+" L 0 "+(h*0.18)+" L "+(w/2)+" "+(-h/2));f.setAttribute("class","env-flap");f.setAttribute("fill","none");f.setAttribute("stroke","#CFE7E3");f.setAttribute("stroke-width","1.5");f.setAttribute("stroke-linejoin","round");g.appendChild(f);
@@ -223,15 +233,15 @@
   var wires=document.getElementById("wires"),nodesG=document.getElementById("nodes");
   var srcEnv=envelope(1.2);document.getElementById("srcEnv").appendChild(srcEnv);
   var nodeEnvs=[];
-  systems.forEach(function(s,i){var cx=s.x,y1=srcY+22,y2=rowY-4;
+  systems.forEach(function(s,i){var cx=s.x,rowY=s.y,y1=srcY+22,y2=rowY-4;
     var p=document.createElementNS(SVGNS,"path");var my=(y1+y2)/2;
     p.setAttribute("d","M "+srcX+" "+y1+" C "+srcX+" "+my+", "+cx+" "+(my-30)+", "+cx+" "+y2);
     p.setAttribute("fill","none");p.setAttribute("stroke","#29433C");p.setAttribute("stroke-width","1.6");wires.appendChild(p);
     var len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p._len=len;
     var box=document.createElementNS(SVGNS,"rect");box.setAttribute("x",cx-boxW/2);box.setAttribute("y",rowY);box.setAttribute("width",boxW);box.setAttribute("height",boxH);box.setAttribute("rx",9);box.setAttribute("class","node-box");nodesG.appendChild(box);
-    var eH=document.createElementNS(SVGNS,"g");eH.setAttribute("transform","translate("+cx+","+(rowY+22)+")");var e=envelope(0.62);eH.appendChild(e);nodesG.appendChild(eH);
-    var t=document.createElementNS(SVGNS,"text");t.setAttribute("x",cx);t.setAttribute("y",rowY+44);t.setAttribute("text-anchor","middle");t.setAttribute("class","lbl");t.textContent=s.name;nodesG.appendChild(t);
-    var tag=document.createElementNS(SVGNS,"text");tag.setAttribute("x",cx);tag.setAttribute("y",rowY+58);tag.setAttribute("text-anchor","middle");tag.setAttribute("class","lbl-sm");tag.setAttribute("fill","#AFC3BE");tag.textContent="";nodesG.appendChild(tag);
+    var eH=document.createElementNS(SVGNS,"g");eH.setAttribute("transform","translate("+cx+","+(rowY+24)+")");var e=envelope(0.62);eH.appendChild(e);nodesG.appendChild(eH);
+    var t=document.createElementNS(SVGNS,"text");t.setAttribute("x",cx);t.setAttribute("y",rowY+48);t.setAttribute("text-anchor","middle");t.setAttribute("class","lbl");t.textContent=s.name;nodesG.appendChild(t);
+    var tag=document.createElementNS(SVGNS,"text");tag.setAttribute("x",cx);tag.setAttribute("y",rowY+62);tag.setAttribute("text-anchor","middle");tag.setAttribute("class","lbl-sm");tag.setAttribute("fill","#AFC3BE");tag.textContent="";nodesG.appendChild(tag);
     nodeEnvs.push({env:e,box:box,tag:tag,wire:p});});
   var cap=document.getElementById("stageCap"),state=document.getElementById("stageState");
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;var timers=[];function T(fn,ms){timers.push(setTimeout(fn,ms));}function clearT(){timers.forEach(clearTimeout);timers=[];}
@@ -252,6 +262,22 @@
   var played=false;
   if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&!played){played=true;T(run,400);io.disconnect();}});},{threshold:0.35});io.observe(document.getElementById("stage"));}else run();
   document.getElementById("replay").addEventListener("click",run);reset();
+})();
+
+(function(){
+  var form=document.getElementById("accessForm"),note=document.getElementById("formNote");
+  if(!form)return;
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+    var data=new FormData(form);
+    note.textContent="Sending\u2026";note.style.color="";
+    fetch(form.action,{method:"POST",body:data,headers:{"Accept":"application/json"}})
+      .then(function(r){
+        if(r.ok){form.reset();note.textContent="Thanks \u2014 we\u2019ll be in touch.";note.style.color="#8FEAE6";}
+        else{note.textContent="Something went wrong \u2014 email christopher@cascadesecurity.io directly.";note.style.color="#D9A876";}
+      })
+      .catch(function(){note.textContent="Something went wrong \u2014 email christopher@cascadesecurity.io directly.";note.style.color="#D9A876";});
+  });
 })();
 </script>
 </body>
