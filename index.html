@@ -257,11 +257,19 @@
     nodeEnvs.forEach(function(n){color(n.env,"#8AA6A0");n.box.setAttribute("stroke","#29433C");n.wire.style.strokeDashoffset=n.wire._len;n.wire.setAttribute("stroke","#29433C");n.tag.textContent="";n.tag.setAttribute("fill","#AFC3BE");n.env._mark.setAttribute("fill","transparent");});
     cap.textContent="One email is delivered";state.textContent="delivered";state.className="stage-state";}
   function run(){reset();
-    if(reduce){color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","rgba(63,176,174,0.6)");color(n.env,"#3FB0AE");n.box.setAttribute("stroke","rgba(63,176,174,0.5)");n.tag.textContent="secured";n.tag.setAttribute("fill","#8FEAE6");});cap.textContent="Cascade carries the verdict downstream";state.textContent="all copies secured";state.className="stage-state good";return;}
+    if(reduce){
+      // Motion-sensitive path: step through the story with timed state changes, no wire-drawing motion.
+      nodeEnvs.forEach(function(n){n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","#29433C");});
+      cap.textContent="One email is delivered";state.textContent="delivered";state.className="stage-state";
+      T(function(){cap.textContent="The verdict flips \u2014 but the copies don't";state.textContent="malicious \u2014 copies still trust it";state.className="stage-state danger";color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.tag.textContent="stale";n.tag.setAttribute("fill","#D9A876");n.wire.setAttribute("stroke","rgba(192,138,90,0.5)");});},900);
+      T(function(){cap.textContent="Cascade carries the verdict downstream";state.textContent="cascading\u2026";state.className="stage-state";},3900);
+      T(function(){nodeEnvs.forEach(function(n){n.wire.setAttribute("stroke","rgba(63,176,174,0.5)");color(n.env,"#3FB0AE");n.box.setAttribute("stroke","rgba(63,176,174,0.5)");n.box.setAttribute("fill","rgba(63,176,174,0.06)");n.tag.textContent="secured";n.tag.setAttribute("fill","#8FEAE6");n.env._mark.setAttribute("fill","#8FEAE6");n.env._mark.textContent="\u2713";});cap.textContent="Every copy now carries the current verdict \u2014 with a record.";state.textContent="all copies secured";state.className="stage-state good";},4600);
+      return;
+    }
     nodeEnvs.forEach(function(n,i){T(function(){n.wire.style.transition="stroke-dashoffset .7s ease";n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","#3A5F58");n.tag.textContent="safe";},300+i*200);});
     var t2=300+systems.length*200+600;
     T(function(){cap.textContent="The verdict flips \u2014 but the copies don't";state.textContent="malicious \u2014 copies still trust it";state.className="stage-state danger";color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.tag.textContent="stale";n.tag.setAttribute("fill","#D9A876");n.wire.setAttribute("stroke","rgba(192,138,90,0.5)");});},t2);
-    var base=t2+1200;
+    var base=t2+3000;
     T(function(){cap.textContent="Cascade carries the verdict downstream";state.textContent="cascading\u2026";state.className="stage-state";},base-150);
     nodeEnvs.forEach(function(n,i){
       T(function(){n.wire.setAttribute("stroke","#EAF6F5");n.wire.style.filter="drop-shadow(0 0 4px rgba(111,224,220,0.8))";n.box.setAttribute("stroke","rgba(63,176,174,0.55)");},base+i*340);
