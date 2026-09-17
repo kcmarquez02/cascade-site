@@ -1,300 +1,507 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cascade — the verdict flows downstream</title>
+<meta name="description" content="When a malicious email is caught and pulled, copies remain in backups, archives, ticketing, shared mailboxes and AI indexes — and one of them will hand it back. Cascade carries the changed verdict downstream, guards the paths that return it, and proves what it did.">
 <style>
-  :root {
-    --pool:      #3FB0AE;   /* turquoise plunge pool — current verdict */
-    --pool-lt:   #6FE0DC;   /* bright spray highlight */
-    --water:     #EAF6F5;   /* whitewater */
-    --stale:     #C08A5A;   /* stale = warm silted water */
-    --ink:       #0C1512;   /* deep forest-shadow base */
-    --paper:     #F1F6F4;
-    --muted:     #AFC3BE;
-    --hair:      #29433C;
-    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  :root{
+    --ink:#0d1117; --body:#414b56; --muted:#6b7684; --line:#e6e9ec;
+    --paper:#ffffff; --wash:#f7f9fb;
+    --accent:#1c62d6; --accent-deep:#0b3a86;
+    --warn:#b4451f; --warn-wash:#fdf2ee;
+    --good:#0d7a48; --good-wash:#eef8f2;
+    --max:1080px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
-  body {
-    font-family: var(--sans); color: var(--paper); background: var(--ink);
-    line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; position: relative;
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+    color:var(--body); background:var(--paper); line-height:1.6;
+    -webkit-font-smoothing:antialiased; font-size:17px;
+  }
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 28px;}
+  a{color:var(--accent); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  strong{color:var(--ink); font-weight:650;}
+  em{font-style:italic;}
+
+  /* ---------- nav ---------- */
+  .nav{position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92);
+       backdrop-filter:saturate(180%) blur(12px); border-bottom:1px solid var(--line);}
+  .nav__inner{display:flex; align-items:center; justify-content:space-between;
+              height:64px; max-width:var(--max); margin:0 auto; padding:0 28px;}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700;
+         letter-spacing:.14em; font-size:13px; color:var(--ink); text-transform:uppercase;}
+  .brand__mark{width:22px;height:22px;flex:0 0 22px;}
+  .nav__links{display:flex; align-items:center; gap:26px;}
+  .nav__link{font-size:14px; color:var(--muted); font-weight:500;}
+  .nav__link:hover{color:var(--ink); text-decoration:none;}
+  .btn{display:inline-block; background:var(--ink); color:#fff; font-size:14px;
+       font-weight:600; padding:9px 18px; border-radius:7px;}
+  .btn:hover{background:#000; text-decoration:none;}
+  .btn--ghost{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  .btn--ghost:hover{background:var(--wash);}
+  .btn--lg{padding:13px 24px; font-size:15px;}
+  @media(max-width:720px){ .nav__links .nav__link{display:none;} }
+
+  /* ---------- hero ---------- */
+  .hero{padding:96px 0 72px; border-bottom:1px solid var(--line);}
+  .eyebrow{font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+           font-weight:700; color:var(--accent); margin-bottom:18px;}
+  h1{font-size:clamp(34px,5.2vw,58px); line-height:1.08; letter-spacing:-.025em;
+     color:var(--ink); font-weight:700; max-width:16ch;}
+  .hero__lede{margin-top:24px; font-size:clamp(17px,2vw,20px); line-height:1.55;
+              max-width:62ch; color:var(--body);}
+  .hero__cta{margin-top:34px; display:flex; gap:12px; flex-wrap:wrap;}
+
+  /* ---------- flow diagram ---------- */
+  .flowviz{margin-top:56px; border:1px solid var(--line); border-radius:14px;
+           background:var(--wash); padding:26px 24px;}
+  .flowviz svg{width:100%; height:auto; display:block;}
+  .flowviz__cap{margin-top:14px; font-size:13px; color:var(--muted); text-align:center;}
+
+  /* ---------- sections ---------- */
+  .section{padding:84px 0; border-bottom:1px solid var(--line);}
+  .section--wash{background:var(--wash);}
+  h2{font-size:clamp(26px,3.4vw,38px); line-height:1.15; letter-spacing:-.02em;
+     color:var(--ink); font-weight:700; max-width:20ch;}
+  .lede{margin-top:20px; font-size:19px; line-height:1.55; max-width:62ch; color:var(--body);}
+  .section p + p{margin-top:16px;}
+  .body-col{max-width:62ch;}
+  .body-col p{margin-top:16px;}
+
+  /* ---------- steps ---------- */
+  .steps{list-style:none; display:grid; gap:18px; margin-top:44px;
+         grid-template-columns:repeat(4,1fr);}
+  .steps--seq{grid-template-columns:repeat(4,1fr); margin-top:36px;}
+  .step{background:var(--paper); border:1px solid var(--line); border-radius:12px;
+        padding:24px 22px; position:relative;}
+  .section--wash .step{background:var(--paper);}
+  .step__num{font-size:11px; font-weight:700; letter-spacing:.12em;
+             text-transform:uppercase; color:var(--accent); display:block;}
+  .step__title{font-size:17px; color:var(--ink); font-weight:650; margin-top:12px;}
+  .step__body{font-size:14.5px; line-height:1.5; color:var(--muted); margin-top:9px;}
+  .step--guard{border-color:#c9dcf7; box-shadow:0 0 0 3px rgba(28,98,214,.06);}
+  @media(max-width:900px){ .steps,.steps--seq{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:560px){ .steps,.steps--seq{grid-template-columns:1fr;} }
+
+  /* ---------- callouts ---------- */
+  .note{margin-top:34px; border-left:3px solid var(--accent); background:#f4f8fe;
+        padding:22px 26px; border-radius:0 10px 10px 0; max-width:74ch;}
+  .note p + p{margin-top:12px;}
+  .note--warn{border-left-color:var(--warn); background:var(--warn-wash);}
+  .fineprint{margin-top:22px; font-size:14.5px; color:var(--muted); max-width:70ch;}
+
+  /* ---------- before / after ---------- */
+  .ba{display:grid; grid-template-columns:1fr 1fr; margin-top:36px;
+      border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .ba__side{padding:26px 28px;}
+  .ba__side--bad{background:var(--warn-wash); border-right:1px solid var(--line);}
+  .ba__side--good{background:var(--good-wash);}
+  .ba__lab{font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700;}
+  .ba__side--bad .ba__lab{color:var(--warn);}
+  .ba__side--good .ba__lab{color:var(--good);}
+  .ba__head{font-size:23px; font-weight:700; letter-spacing:-.01em; margin:10px 0 8px;}
+  .ba__side--bad .ba__head{color:var(--warn);}
+  .ba__side--good .ba__head{color:var(--good);}
+  .ba__body{font-size:14.5px; line-height:1.5; color:var(--body);}
+  @media(max-width:660px){
+    .ba{grid-template-columns:1fr;}
+    .ba__side--bad{border-right:0; border-bottom:1px solid var(--line);}
   }
 
-  /* ===== real Durango photo, fixed behind everything ===== */
-  .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  .scene .photo {
-    position: absolute; inset: 0;
-    background-image: url("durango.jpg");
-    background-size: cover; background-position: center top; background-repeat: no-repeat;
+  /* ---------- surfaces ---------- */
+  .surfaces{list-style:none; display:grid; grid-template-columns:repeat(3,1fr);
+            gap:12px; margin-top:34px;}
+  .surface{border:1px solid var(--line); border-radius:10px; padding:16px 18px;
+           background:var(--paper);}
+  .surface__name{font-size:14.5px; font-weight:650; color:var(--ink);}
+  .surface__note{font-size:13px; color:var(--muted); margin-top:5px; line-height:1.45;}
+  @media(max-width:860px){ .surfaces{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:520px){ .surfaces{grid-template-columns:1fr;} }
+
+  /* ---------- access ---------- */
+  .access{text-align:center;}
+  .access h2{margin:0 auto; max-width:22ch;}
+  .access .lede{margin-left:auto; margin-right:auto;}
+  .access__cta{margin-top:32px;}
+  .access__fine{margin-top:16px; font-size:13.5px; color:var(--muted);}
+  .access__form{margin-top:32px; display:flex; gap:10px;
+                justify-content:center; flex-wrap:wrap;}
+  .access__form input[type="email"]{
+    font:inherit; font-size:15px; line-height:1.2; color:var(--ink);
+    background:var(--paper); border:1px solid var(--line); border-radius:7px;
+    padding:13px 16px; min-width:300px;}
+  .access__form input[type="email"]::placeholder{color:var(--muted);}
+  .access__form input[type="email"]:focus{outline:none; border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(28,98,214,.15);}
+  .access__form .btn{font-family:inherit; line-height:1.2; border:1px solid var(--ink);
+                     cursor:pointer;}
+  @media(max-width:520px){
+    .access__form input[type="email"]{min-width:0; width:100%;}
+    .access__form .btn{width:100%;}
   }
-  .scene .veil {
-    position: absolute; inset: 0;
-    background:
-      linear-gradient(180deg, rgba(12,21,18,0.30) 0%, rgba(12,21,18,0.20) 30%, rgba(12,21,18,0.55) 70%, rgba(12,21,18,0.88) 100%),
-      linear-gradient(90deg, rgba(12,21,18,0.72) 0%, rgba(12,21,18,0.45) 32%, rgba(12,21,18,0.08) 60%, rgba(12,21,18,0.0) 100%);
-  }
 
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 2; }
-
-  header { position: sticky; top: 0; z-index: 50; background: rgba(12,21,18,0.55); backdrop-filter: blur(12px); border-bottom: 1px solid var(--hair); }
-  .bar { display: flex; align-items: center; justify-content: space-between; height: 66px; }
-  .logo { font-family: var(--mono); font-size: 15px; letter-spacing: 0.04em; font-weight: 500; display: flex; align-items: center; gap: 11px; }
-  .logo .glyph { width: 16px; height: 16px; position: relative; display: inline-block; }
-  .logo .glyph span { position: absolute; left: 0; height: 2px; border-radius: 2px; }
-  .logo .glyph span:nth-child(1){ top: 1px; width:100%; background: var(--water); opacity:1; }
-  .logo .glyph span:nth-child(2){ top: 7px; width:70%; left:15%; background: var(--pool-lt); opacity:.9; }
-  .logo .glyph span:nth-child(3){ top: 13px; width:40%; left:30%; background: var(--pool); opacity:.8; }
-  .nav-cta { font-family: var(--mono); font-size: 13px; color: var(--paper); text-decoration: none; border: 1px solid var(--hair); padding: 8px 16px; border-radius: 6px; transition: border-color .2s, background .2s; }
-  .nav-cta:hover { border-color: var(--pool-lt); background: rgba(63,176,174,0.14); }
-
-  .hero { padding: 120px 0 90px; min-height: 88vh; display: flex; flex-direction: column; justify-content: center; }
-  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--pool-lt); margin-bottom: 28px; text-shadow: 0 1px 12px rgba(0,0,0,0.6); }
-  h1 { font-size: clamp(40px, 6.4vw, 72px); line-height: 1.01; letter-spacing: -0.02em; font-weight: 600; max-width: 15ch; margin-bottom: 28px; text-shadow: 0 2px 40px rgba(0,0,0,0.75); }
-  h1 .fade { color: var(--pool-lt); }
-  .lede { font-size: clamp(17px, 2vw, 21px); color: #E4EFEC; max-width: 50ch; margin-bottom: 40px; line-height: 1.56; text-shadow: 0 1px 22px rgba(0,0,0,0.8); }
-  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-  .btn { font-family: var(--mono); font-size: 14px; text-decoration: none; padding: 14px 24px; border-radius: 7px; transition: all .2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; }
-  .btn-primary { background: var(--pool); color: #05201f; font-weight: 600; box-shadow: 0 4px 24px rgba(63,176,174,0.3); }
-  .btn-primary:hover { background: var(--pool-lt); transform: translateY(-1px); }
-  .btn-ghost { color: var(--paper); border: 1px solid rgba(255,255,255,0.35); background: rgba(12,21,18,0.35); backdrop-filter: blur(4px); }
-  .btn-ghost:hover { border-color: var(--pool-lt); }
-
-  /* content below hero sits on a solid deep panel so it's readable off the photo */
-  .content { background: linear-gradient(180deg, rgba(12,21,18,0.80) 0%, rgba(12,21,18,0.90) 6%, rgba(12,21,18,0.94) 16%, rgba(12,21,18,0.965) 40%, rgba(12,21,18,0.975) 100%); position: relative; z-index: 2; }
-
-  .stage { border: 1px solid var(--hair); border-radius: 16px; background: rgba(12,21,18,0.6); backdrop-filter: blur(6px); padding: 24px 30px 20px; position: relative; overflow: hidden; margin-top: 8px; }
-  .stage-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap:14px; }
-  .stage-cap { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-  .stage-state { font-family: var(--mono); font-size: 11px; letter-spacing: 0.03em; padding: 5px 12px; border-radius: 20px; border:1px solid var(--hair); color: var(--muted); transition: all .4s ease; white-space: nowrap; }
-  .stage-state.danger { color: #E7B98C; border-color: rgba(192,138,90,0.6); background: rgba(192,138,90,0.15); }
-  .stage-state.good { color: #8FEAE6; border-color: rgba(63,176,174,0.6); background: rgba(63,176,174,0.14); }
-
-  svg .lbl { font-family: var(--mono); font-size: 11px; fill: #CFE7E3; }
-  svg .lbl-sm { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; }
-  svg .node-box { fill: rgba(255,255,255,0.03); stroke: var(--hair); stroke-width: 1; transition: stroke .5s ease, fill .5s ease; }
-  .env-body, .env-flap { transition: fill .5s ease, stroke .5s ease; }
-
-  .stage-legend { display: flex; gap: 20px; align-items:center; margin-top: 12px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); flex-wrap: wrap; }
-  .stage-legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .dot.stale { background: var(--stale); }
-  .dot.ok { background: var(--pool); }
-  .dot.sig { background: var(--water); }
-  .replay { font-family: var(--mono); font-size: 11px; color: var(--muted); background: none; border: 1px solid var(--hair); border-radius: 6px; padding: 5px 12px; cursor: pointer; transition: all .2s; margin-left:auto; }
-  .replay:hover { color: var(--paper); border-color: var(--muted); }
-
-  section { padding: 84px 0; border-top: 1px solid var(--hair); }
-  .sec-eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--pool-lt); margin-bottom: 20px; }
-  h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; letter-spacing: -0.01em; font-weight: 600; max-width: 20ch; margin-bottom: 24px; }
-  .prose { font-size: 17px; color: #DCEAE7; max-width: 60ch; line-height: 1.62; }
-  .prose + .prose { margin-top: 18px; }
-  .prose strong { color: var(--paper); font-weight: 600; }
-
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 12px; overflow: hidden; margin-top: 8px; }
-  .step { background: rgba(12,21,18,0.7); padding: 32px 26px; }
-  .step-n { font-family: var(--mono); font-size: 12px; color: var(--pool-lt); letter-spacing: 0.1em; margin-bottom: 18px; }
-  .step h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; letter-spacing: -0.01em; }
-  .step p { font-size: 14px; color: var(--muted); line-height: 1.55; }
-
-  .cta-band { text-align: center; }
-  .cta-band h2 { margin: 0 auto 20px; max-width: 24ch; }
-  .cta-band .prose { margin: 0 auto 36px; }
-  .form-row { display: flex; gap: 10px; justify-content: center; max-width: 460px; margin: 0 auto; flex-wrap: wrap; }
-  input[type=email] { flex: 1; min-width: 220px; font-family: var(--mono); font-size: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--hair); color: var(--paper); padding: 13px 16px; border-radius: 7px; transition: border-color .2s; }
-  input[type=email]:focus { outline: none; border-color: var(--pool); }
-  input[type=email]::placeholder { color: var(--muted); }
-  .form-note { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 16px; letter-spacing: 0.03em; }
-
-  footer { border-top: 1px solid var(--hair); padding: 40px 0; position: relative; z-index: 2; background: #0C1512; }
-  .foot { display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 16px; }
-  .foot a { color: var(--muted); text-decoration: none; }
-  .foot a:hover { color: var(--paper); }
-
-  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } .hero { padding: 90px 0 60px; min-height: 80vh;} .stage { padding: 18px 12px 16px; } .scene .photo{ background-position: 60% top; } }
+  /* ---------- footer ---------- */
+  .footer{padding:40px 0 56px;}
+  .footer__inner{display:flex; align-items:center; justify-content:space-between;
+                 gap:20px; flex-wrap:wrap;}
+  .footer__meta{font-size:13px; color:var(--muted);}
 </style>
 </head>
 <body>
 
-<div class="scene" aria-hidden="true">
-  <div class="photo"></div>
-  <div class="veil"></div>
-</div>
+<!-- ================= NAV ================= -->
+<nav class="nav">
+  <div class="nav__inner">
+    <a class="brand" href="#top">
+      <svg class="brand__mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 5h16M7 11h13M10 17h10" stroke="#1c62d6" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="4" cy="11" r="1.7" fill="#0d1117"/>
+        <circle cx="7" cy="17" r="1.7" fill="#0d1117"/>
+      </svg>
+      Cascade
+    </a>
+    <div class="nav__links">
+      <a class="nav__link" href="#gap">The gap</a>
+      <a class="nav__link" href="#reinfection">Reinfection</a>
+      <a class="nav__link" href="#how">How it works</a>
+      <a class="btn" href="#access">Request access</a>
+    </div>
+  </div>
+</nav>
 
-<header>
-  <div class="wrap bar">
-    <div class="logo"><span class="glyph"><span></span><span></span><span></span></span> CASCADE</div>
-    <a href="#access" class="nav-cta">Request access</a>
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="wrap">
+    <p class="eyebrow">Verdict propagation</p>
+    <h1>When the verdict changes, make it flow downstream.</h1>
+    <p class="hero__lede">
+      When a malicious email is caught and pulled, it has already copied itself into backups,
+      archives, ticketing, shared mailboxes, and AI indexes — and every copy still reads as safe.
+      One of them will hand it back. Cascade carries the new verdict down to all of them,
+      guards the paths that return it, and proves what it did.
+    </p>
+    <div class="hero__cta">
+      <a class="btn btn--lg" href="#access">Request early access →</a>
+      <a class="btn btn--lg btn--ghost" href="#how">See how it works</a>
+    </div>
+
+    <!-- flow diagram -->
+    <div class="flowviz">
+      <svg viewBox="0 0 900 190" role="img" aria-label="One email is delivered, copies spread to downstream systems carrying a stale verdict, Cascade propagates the changed verdict and guards the restore path.">
+        <defs>
+          <marker id="ar" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0 0 L7 3.5 L0 7 z" fill="#b9c2cc"/>
+          </marker>
+          <marker id="ar-blue" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0 0 L7 3.5 L0 7 z" fill="#1c62d6"/>
+          </marker>
+          <marker id="ar-warn" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0 0 L7 3.5 L0 7 z" fill="#b4451f"/>
+          </marker>
+        </defs>
+
+        <!-- source -->
+        <rect x="14" y="70" width="128" height="50" rx="9" fill="#fff" stroke="#d8dee5"/>
+        <text x="78" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#0d1117" font-family="system-ui">INBOX</text>
+        <text x="78" y="106" text-anchor="middle" font-size="10" fill="#6b7684" font-family="system-ui">verdict flips</text>
+
+        <!-- fan out -->
+        <path d="M142 86 C 200 58, 235 42, 292 42" stroke="#b9c2cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+        <path d="M142 95 C 205 95, 240 95, 292 95" stroke="#b9c2cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+        <path d="M142 104 C 200 132, 235 148, 292 148" stroke="#b9c2cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+        <!-- downstream copies -->
+        <rect x="296" y="22" width="150" height="40" rx="8" fill="#fdf2ee" stroke="#f0cdbf"/>
+        <text x="371" y="41" text-anchor="middle" font-size="10.5" font-weight="650" fill="#b4451f" font-family="system-ui">BACKUP / ARCHIVE</text>
+        <text x="371" y="54" text-anchor="middle" font-size="9.5" fill="#9a7a6d" font-family="system-ui">stale verdict</text>
+
+        <rect x="296" y="75" width="150" height="40" rx="8" fill="#fdf2ee" stroke="#f0cdbf"/>
+        <text x="371" y="94" text-anchor="middle" font-size="10.5" font-weight="650" fill="#b4451f" font-family="system-ui">MAILBOXES / TICKETS</text>
+        <text x="371" y="107" text-anchor="middle" font-size="9.5" fill="#9a7a6d" font-family="system-ui">stale verdict</text>
+
+        <rect x="296" y="128" width="150" height="40" rx="8" fill="#fdf2ee" stroke="#f0cdbf"/>
+        <text x="371" y="147" text-anchor="middle" font-size="10.5" font-weight="650" fill="#b4451f" font-family="system-ui">FILES / AI INDEX</text>
+        <text x="371" y="160" text-anchor="middle" font-size="9.5" fill="#9a7a6d" font-family="system-ui">stale verdict</text>
+
+        <!-- cascade -->
+        <path d="M446 42 C 505 42, 520 78, 566 88" stroke="#1c62d6" stroke-width="1.8" fill="none" marker-end="url(#ar-blue)"/>
+        <path d="M446 95 C 500 95, 520 95, 566 95" stroke="#1c62d6" stroke-width="1.8" fill="none" marker-end="url(#ar-blue)"/>
+        <path d="M446 148 C 505 148, 520 112, 566 102" stroke="#1c62d6" stroke-width="1.8" fill="none" marker-end="url(#ar-blue)"/>
+
+        <rect x="570" y="68" width="140" height="54" rx="10" fill="#eef4fd" stroke="#1c62d6" stroke-width="1.4"/>
+        <text x="640" y="90" text-anchor="middle" font-size="12" font-weight="700" fill="#0b3a86" font-family="system-ui">CASCADE</text>
+        <text x="640" y="106" text-anchor="middle" font-size="9.5" fill="#4a6ea8" font-family="system-ui">verdict propagated</text>
+
+        <!-- secured -->
+        <path d="M710 95 C 755 95, 775 95, 806 95" stroke="#0d7a48" stroke-width="1.8" fill="none" marker-end="url(#ar-blue)"/>
+        <rect x="810" y="72" width="78" height="46" rx="9" fill="#eef8f2" stroke="#b7ddc8"/>
+        <text x="849" y="91" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d7a48" font-family="system-ui">SECURED</text>
+        <text x="849" y="105" text-anchor="middle" font-size="9" fill="#5c8a72" font-family="system-ui">+ proven</text>
+
+        <!-- guard / replay loop -->
+        <path d="M371 22 C 371 6, 640 2, 640 62" stroke="#b4451f" stroke-width="1.6" fill="none"
+              stroke-dasharray="4 4" marker-end="url(#ar-warn)"/>
+        <text x="505" y="14" text-anchor="middle" font-size="9.5" font-weight="650"
+              fill="#b4451f" font-family="system-ui">↻ restore replays the threat — guarded</text>
+      </svg>
+      <p class="flowviz__cap">One email. Many copies. One changed verdict — carried everywhere, and held against the paths that return it.</p>
+    </div>
   </div>
 </header>
 
-<div class="wrap">
-  <div class="hero">
-    <div class="eyebrow">Verdict propagation</div>
-    <h1>When the verdict changes, <span class="fade">make it flow downstream.</span></h1>
-    <p class="lede">
-      When a malicious email is caught and pulled, it has already copied itself into backups,
-      archives, ticketing, shared mailboxes, and AI indexes — and every copy still reads as safe.
-      Cascade carries the new verdict down to all of them, and proves it.
-    </p>
-    <div class="hero-actions">
-      <a href="#access" class="btn btn-primary">Request early access &rarr;</a>
-      <a href="#how" class="btn btn-ghost">See how it works</a>
-    </div>
-  </div>
-</div>
-
-<div class="content">
-<div class="wrap">
-  <div class="stage" id="stage">
-    <div class="stage-top">
-      <span class="stage-cap" id="stageCap">One email is delivered</span>
-      <span class="stage-state" id="stageState">delivered</span>
-    </div>
-    <svg id="svg" viewBox="0 0 900 560" width="100%" role="img" aria-label="One email is delivered; copies spread into nine downstream systems; it is flagged malicious; Cascade carries the verdict downstream to every copy.">
-      <g id="wires"></g>
-      <g id="source" transform="translate(450,44)"><g id="srcEnv"></g><text class="lbl-sm" x="0" y="42" text-anchor="middle" fill="#AFC3BE">SOURCE &middot; INBOX</text></g>
-      <g id="nodes"></g>
-    </svg>
-    <div class="stage-legend">
-      <span><i class="dot stale"></i> stale verdict</span>
-      <span><i class="dot sig"></i> verdict cascading</span>
-      <span><i class="dot ok"></i> secured</span>
-      <button class="replay" id="replay">&#8635; replay</button>
-    </div>
-  </div>
-</div>
-
-<div class="wrap">
-  <section id="how">
-    <div class="sec-eyebrow">The gap</div>
+<!-- ================= THE GAP ================= -->
+<section class="section" id="gap">
+  <div class="wrap">
+    <p class="eyebrow">The gap</p>
     <h2>Remediation stops at the inbox. The threat doesn't.</h2>
-    <p class="prose">Email security tools are good at catching a malicious message and pulling it &mdash; <strong>after</strong> delivery, once they've changed their mind. But delivery is also when a message multiplies. By the time the verdict flips, copies are sitting in systems the security tool has no reach into.</p>
-    <p class="prose">Those copies keep the <strong>old</strong> disposition. The backup restores a live threat. The archive hands it to an auditor. The AI assistant retrieves it as a trusted source. Nobody told them the verdict changed &mdash; because nothing was built to.</p>
-  </section>
-
-  <section>
-    <div class="sec-eyebrow">The approach</div>
-    <h2>A control plane for the changed verdict.</h2>
-    <p class="prose" style="margin-bottom:40px;">Cascade is vendor-neutral. It takes a verdict from whatever security stack produced it, finds every place the message went, and applies the strongest action each of those systems will accept &mdash; then records what it did.</p>
-    <div class="steps">
-      <div class="step"><div class="step-n">01 / MAP</div><h3>Find every copy</h3><p>Trace the message across mail, backup, archive, ticketing, file stores, and indexes &mdash; by identity, not by keyword.</p></div>
-      <div class="step"><div class="step-n">02 / PROPAGATE</div><h3>Carry the verdict</h3><p>Apply the strongest action each system accepts &mdash; remove, restrict, tag, or flag &mdash; reversibly, never destructively.</p></div>
-      <div class="step"><div class="step-n">03 / PROVE</div><h3>Show your work</h3><p>Produce a disposition record: what was found, what was done, and where &mdash; an answer for the audit, not a guess.</p></div>
+    <div class="body-col">
+      <p>
+        Email security tools are good at catching a malicious message and pulling it —
+        <strong>after</strong> delivery, once they've changed their mind. But delivery is also
+        when a message multiplies. By the time the verdict flips, copies are sitting in systems
+        the security tool has no reach into.
+      </p>
+      <p>
+        Those copies keep the <strong>old</strong> disposition. The backup restores a live threat.
+        The archive hands it to an auditor. The AI assistant retrieves it as a trusted source.
+        Nobody told them the verdict changed — because nothing was built to.
+      </p>
+      <p>
+        And the backup doesn't only hold its copy. It will put it back.
+        <a href="#reinfection">See how reinfection happens →</a>
+      </p>
     </div>
-  </section>
 
-  <section class="cta-band" id="access">
-    <div class="sec-eyebrow" style="text-align:center;">Early access</div>
+    <ul class="surfaces">
+      <li class="surface"><div class="surface__name">Shared &amp; other mailboxes</div><div class="surface__note">It went to four people, not one.</div></li>
+      <li class="surface"><div class="surface__name">Deleted &amp; recoverable</div><div class="surface__note">"Handled" mail, sitting intact.</div></li>
+      <li class="surface"><div class="surface__name">Archive &amp; journal</div><div class="surface__note">Retained for years, never revisited.</div></li>
+      <li class="surface"><div class="surface__name">Backup</div><div class="surface__note">Frozen — and restorable.</div></li>
+      <li class="surface"><div class="surface__name">AI assistant index</div><div class="surface__note">Retrieved as a trusted source.</div></li>
+      <li class="surface"><div class="surface__name">Quarantine</div><div class="surface__note">Held, but still addressable.</div></li>
+      <li class="surface"><div class="surface__name">Cloud file storage</div><div class="surface__note">The attachment got saved.</div></li>
+      <li class="surface"><div class="surface__name">PSA / ticketing</div><div class="surface__note">Attached to a ticket, never re-checked.</div></li>
+      <li class="surface"><div class="surface__name">Workflow &amp; chat</div><div class="surface__note">Forwarded out of sight.</div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= REINFECTION ================= -->
+<section class="section section--wash" id="reinfection">
+  <div class="wrap">
+    <p class="eyebrow">Why guard</p>
+    <h2>The backup doesn't just store the threat. It puts it back.</h2>
+    <p class="lede">
+      Every other copy sits still. This one comes back. A restore is the one system that
+      re-delivers a message into the live mailbox — unread, clickable, and carrying the verdict
+      it had <em>before</em> anyone changed their mind.
+    </p>
+
+    <div class="body-col">
+      <p>
+        The sequence is ordinary, which is what makes it dangerous. An attacker seeds phishing
+        over weeks. Some of it is caught and pulled. Later they land something real — bad enough
+        that the mailbox gets restored from backup, or a retention hold reaches back into the
+        archive. That snapshot was taken <strong>before</strong> the cleanup. So the restore
+        faithfully returns every malicious message the security tool had already removed.
+      </p>
+      <p>
+        The remediation is undone. Nothing alerts, because nothing was built to watch the restore
+        path — the backup is doing exactly what it was bought to do. The user opens a message they
+        were already protected from, delivered this time by the recovery tool.
+      </p>
+    </div>
+
+    <ol class="steps steps--seq">
+      <li class="step">
+        <span class="step__num">01</span>
+        <h3 class="step__title">Pulled</h3>
+        <p class="step__body">The verdict flips. The security tool removes the message from the inbox.</p>
+      </li>
+      <li class="step">
+        <span class="step__num">02</span>
+        <h3 class="step__title">Restored</h3>
+        <p class="step__body">A recovery from backup or archive returns the message — live, unread, clickable.</p>
+      </li>
+      <li class="step">
+        <span class="step__num">03</span>
+        <h3 class="step__title">Caught</h3>
+        <p class="step__body">Cascade sees the restore and re-checks what came back against every verdict it holds.</p>
+      </li>
+      <li class="step">
+        <span class="step__num">04</span>
+        <h3 class="step__title">Cleared</h3>
+        <p class="step__body">The reintroduced copy is pulled again — and the action is written to the record.</p>
+      </li>
+    </ol>
+
+    <div class="ba">
+      <div class="ba__side ba__side--bad">
+        <p class="ba__lab">Without Cascade</p>
+        <p class="ba__head">Reinfected</p>
+        <p class="ba__body">
+          The restore silently reintroduces every remediated threat. Nothing watches the restore
+          path. The user clicks the message they were already protected from.
+        </p>
+      </div>
+      <div class="ba__side ba__side--good">
+        <p class="ba__lab">With Cascade</p>
+        <p class="ba__head">Auto-cleared</p>
+        <p class="ba__body">
+          Cascade detects the restore, re-checks what came back against every verdict it holds,
+          and removes what shouldn't have returned — then records it.
+        </p>
+      </div>
+    </div>
+
+    <div class="note note--warn">
+      <p>
+        <strong>You can't fix this inside the backup.</strong> Backups are immutable on purpose —
+        that immutability is the product. Reaching in to delete a message would break the guarantee
+        the backup exists to make, and most platforms won't permit it at the item level anyway.
+      </p>
+      <p>
+        So Cascade doesn't fight the backup. It guards the door the backup opens — watching the
+        restore path, re-evaluating what re-enters against the current verdict, and acting on what
+        shouldn't have come back.
+      </p>
+    </div>
+
+    <p class="fineprint">
+      Source-agnostic by design — whichever tool produced the original verdict, the returning copy
+      is matched against everything Cascade holds. And verdicts move: a message that was clean when
+      it was backed up can be known-bad by the time it's restored. That one is caught on the way in too.
+    </p>
+  </div>
+</section>
+
+<!-- ================= THE APPROACH ================= -->
+<section class="section" id="how">
+  <div class="wrap">
+    <p class="eyebrow">The approach</p>
+    <h2>A control plane for the changed verdict.</h2>
+    <p class="lede">
+      Cascade is vendor-neutral. It takes a verdict from whatever security stack produced it,
+      finds every place the message went, applies the strongest action each of those systems will
+      accept, holds the line against the ones that put it back — and records what it did.
+    </p>
+
+    <ol class="steps">
+      <li class="step">
+        <span class="step__num">01 / Map</span>
+        <h3 class="step__title">Find every copy</h3>
+        <p class="step__body">
+          Trace the message across mail, backup, archive, ticketing, file stores, and indexes —
+          by identity, not by keyword.
+        </p>
+      </li>
+      <li class="step">
+        <span class="step__num">02 / Propagate</span>
+        <h3 class="step__title">Carry the verdict</h3>
+        <p class="step__body">
+          Apply the strongest action each system accepts — remove, restrict, tag, or flag —
+          reversibly, never destructively.
+        </p>
+      </li>
+      <li class="step step--guard">
+        <span class="step__num">03 / Guard</span>
+        <h3 class="step__title">Hold the line</h3>
+        <p class="step__body">
+          Watch the paths that put messages back — restores, archive recoveries, re-syncs — and
+          re-check what returns against the current verdict. Cleanup is a moment. This doesn't stop.
+        </p>
+      </li>
+      <li class="step">
+        <span class="step__num">04 / Prove</span>
+        <h3 class="step__title">Show your work</h3>
+        <p class="step__body">
+          Produce a disposition record: what was found, what was done, and where — an answer for
+          the audit, not a guess.
+        </p>
+      </li>
+    </ol>
+
+    <div class="note">
+      <p>
+        <strong>Cascade sources verdicts. It never invents them.</strong> The detection call stays
+        with the security stack you already bought — Cascade makes that call reach the places it
+        couldn't, and keeps it enforced as systems hand copies back.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ACCESS ================= -->
+<section class="section section--wash access" id="access">
+  <div class="wrap">
+    <p class="eyebrow">Early access</p>
     <h2>Built for the teams who own the aftermath.</h2>
-    <p class="prose">Cascade is in early development with design partners. If you run security for an organization &mdash; or for other organizations &mdash; and this problem is familiar, we'd like to talk.</p>
-    <form class="form-row" id="accessForm" action="https://formspree.io/f/xbgrnaql" method="POST">
-      <input type="email" name="email" placeholder="you@organization.com" required aria-label="Email address">
-      <button type="submit" class="btn btn-primary">Request access</button>
+    <p class="lede">
+      Cascade is in early development with design partners. If you run security for an organization
+      — or for other organizations — and this problem is familiar, we'd like to talk.
+    </p>
+    <form class="access__form" id="accessForm"
+          action="https://formspree.io/f/xbgrnaql" method="POST">
+      <input type="email" name="email" placeholder="you@organization.com"
+             required aria-label="Email address">
+      <button type="submit" class="btn btn--lg">Request access</button>
     </form>
-    <div class="form-note" id="formNote">We read every request.</div>
-  </section>
-</div>
+    <p class="access__fine" id="formNote">We read every request.</p>
+  </div>
+</section>
 
-<footer>
-  <div class="wrap foot">
-    <div class="logo"><span class="glyph"><span></span><span></span><span></span></span> CASCADE</div>
-    <div>&copy; 2026 Cascade Security &middot; cascadesecurity.io</div>
-    <div><a href="#access">Request access</a></div>
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <a class="brand" href="#top">
+      <svg class="brand__mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 5h16M7 11h13M10 17h10" stroke="#1c62d6" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="4" cy="11" r="1.7" fill="#0d1117"/>
+        <circle cx="7" cy="17" r="1.7" fill="#0d1117"/>
+      </svg>
+      Cascade
+    </a>
+    <p class="footer__meta">© 2026 Cascade Security · cascadesecurity.io</p>
   </div>
 </footer>
-</div>
 
 <script>
+/* Access form: submit to Formspree via fetch so the visitor stays on the page.
+   Without JS the form still works -- it posts natively to the same endpoint. */
 (function(){
-  var SVGNS="http://www.w3.org/2000/svg";
-  var systems=[
-    {name:"Other recipient inboxes",x:170,y:250},
-    {name:"Deleted & recoverable",x:450,y:250},
-    {name:"Archive & journal",x:730,y:250},
-    {name:"SaaS backup",x:170,y:370},
-    {name:"Quarantine",x:450,y:370},
-    {name:"PSA / ticketing",x:730,y:370},
-    {name:"Cloud file storage",x:170,y:490},
-    {name:"AI assistant index",x:450,y:490},
-    {name:"Workflow & chat",x:730,y:490}
-  ];
-  var srcX=450,srcY=44,boxW=210,boxH=70;
-  function envelope(s){s=s||1;var g=document.createElementNS(SVGNS,"g");var w=40*s,h=27*s;
-    var b=document.createElementNS(SVGNS,"rect");b.setAttribute("x",-w/2);b.setAttribute("y",-h/2);b.setAttribute("width",w);b.setAttribute("height",h);b.setAttribute("rx",3);b.setAttribute("class","env-body");b.setAttribute("fill","rgba(255,255,255,0.05)");b.setAttribute("stroke","#CFE7E3");b.setAttribute("stroke-width","1.5");g.appendChild(b);
-    var f=document.createElementNS(SVGNS,"path");f.setAttribute("d","M "+(-w/2)+" "+(-h/2)+" L 0 "+(h*0.18)+" L "+(w/2)+" "+(-h/2));f.setAttribute("class","env-flap");f.setAttribute("fill","none");f.setAttribute("stroke","#CFE7E3");f.setAttribute("stroke-width","1.5");f.setAttribute("stroke-linejoin","round");g.appendChild(f);
-    var m=document.createElementNS(SVGNS,"text");m.setAttribute("x",0);m.setAttribute("y",-h/2-6*s);m.setAttribute("text-anchor","middle");m.setAttribute("font-family","ui-monospace, monospace");m.setAttribute("font-size",13*s);m.setAttribute("fill","transparent");g.appendChild(m);
-    g._body=b;g._flap=f;g._mark=m;return g;}
-  function color(g,st){g._body.setAttribute("stroke",st);g._flap.setAttribute("stroke",st);}
-  var wires=document.getElementById("wires"),nodesG=document.getElementById("nodes");
-  var srcEnv=envelope(1.2);document.getElementById("srcEnv").appendChild(srcEnv);
-  var nodeEnvs=[];
-  systems.forEach(function(s,i){var cx=s.x,rowY=s.y;
-    // Determine where this wire starts: from the box directly above (same column, previous row), else from source
-    var startX, startY;
-    var above=null;
-    for(var j=0;j<i;j++){if(systems[j].x===cx && systems[j].y<rowY){if(!above||systems[j].y>above.y)above=systems[j];}}
-    if(above){startX=cx;startY=above.y+boxH;}      // from bottom of box above
-    else{startX=srcX;startY=srcY+22;}               // row 1: from source
-    var y2=rowY-4;
-    var p=document.createElementNS(SVGNS,"path");
-    var my=(startY+y2)/2;
-    p.setAttribute("d","M "+startX+" "+startY+" C "+startX+" "+my+", "+cx+" "+my+", "+cx+" "+y2);
-    p.setAttribute("fill","none");p.setAttribute("stroke","#29433C");p.setAttribute("stroke-width","1.6");wires.appendChild(p);
-    var len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p._len=len;
-    var box=document.createElementNS(SVGNS,"rect");box.setAttribute("x",cx-boxW/2);box.setAttribute("y",rowY);box.setAttribute("width",boxW);box.setAttribute("height",boxH);box.setAttribute("rx",9);box.setAttribute("class","node-box");nodesG.appendChild(box);
-    var eH=document.createElementNS(SVGNS,"g");eH.setAttribute("transform","translate("+cx+","+(rowY+24)+")");var e=envelope(0.62);eH.appendChild(e);nodesG.appendChild(eH);
-    var t=document.createElementNS(SVGNS,"text");t.setAttribute("x",cx);t.setAttribute("y",rowY+48);t.setAttribute("text-anchor","middle");t.setAttribute("class","lbl");t.textContent=s.name;nodesG.appendChild(t);
-    var tag=document.createElementNS(SVGNS,"text");tag.setAttribute("x",cx);tag.setAttribute("y",rowY+62);tag.setAttribute("text-anchor","middle");tag.setAttribute("class","lbl-sm");tag.setAttribute("fill","#AFC3BE");tag.textContent="";nodesG.appendChild(tag);
-    nodeEnvs.push({env:e,box:box,tag:tag,wire:p});});
-  var cap=document.getElementById("stageCap"),state=document.getElementById("stageState");
-  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;var timers=[];function T(fn,ms){timers.push(setTimeout(fn,ms));}function clearT(){timers.forEach(clearTimeout);timers=[];}
-  function reset(){clearT();color(srcEnv,"#CFE7E3");srcEnv._mark.setAttribute("fill","transparent");
-    nodeEnvs.forEach(function(n){color(n.env,"#8AA6A0");n.box.setAttribute("stroke","#29433C");n.wire.style.strokeDashoffset=n.wire._len;n.wire.setAttribute("stroke","#29433C");n.tag.textContent="";n.tag.setAttribute("fill","#AFC3BE");n.env._mark.setAttribute("fill","transparent");});
-    cap.textContent="One email is delivered";state.textContent="delivered";state.className="stage-state";}
-  function run(){reset();
-    if(reduce){
-      // Motion-sensitive path: step through the story with timed state changes, no wire-drawing motion.
-      nodeEnvs.forEach(function(n){n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","#29433C");});
-      cap.textContent="One email is delivered";state.textContent="delivered";state.className="stage-state";
-      T(function(){cap.textContent="The verdict flips \u2014 but the copies don't";state.textContent="malicious \u2014 copies still trust it";state.className="stage-state danger";color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.tag.textContent="stale";n.tag.setAttribute("fill","#D9A876");n.wire.setAttribute("stroke","rgba(192,138,90,0.5)");});},900);
-      T(function(){cap.textContent="Cascade carries the verdict downstream";state.textContent="cascading\u2026";state.className="stage-state";},3900);
-      T(function(){nodeEnvs.forEach(function(n){n.wire.setAttribute("stroke","rgba(63,176,174,0.5)");color(n.env,"#3FB0AE");n.box.setAttribute("stroke","rgba(63,176,174,0.5)");n.box.setAttribute("fill","rgba(63,176,174,0.06)");n.tag.textContent="secured";n.tag.setAttribute("fill","#8FEAE6");n.env._mark.setAttribute("fill","#8FEAE6");n.env._mark.textContent="\u2713";});cap.textContent="Every copy now carries the current verdict \u2014 with a record.";state.textContent="all copies secured";state.className="stage-state good";},4600);
-      return;
-    }
-    nodeEnvs.forEach(function(n,i){T(function(){n.wire.style.transition="stroke-dashoffset .7s ease";n.wire.style.strokeDashoffset=0;n.wire.setAttribute("stroke","#3A5F58");n.tag.textContent="safe";},300+i*200);});
-    var t2=300+systems.length*200+600;
-    T(function(){cap.textContent="The verdict flips \u2014 but the copies don't";state.textContent="malicious \u2014 copies still trust it";state.className="stage-state danger";color(srcEnv,"#C08A5A");srcEnv._mark.setAttribute("fill","#E7B98C");srcEnv._mark.textContent="\u26A0";nodeEnvs.forEach(function(n){n.tag.textContent="stale";n.tag.setAttribute("fill","#D9A876");n.wire.setAttribute("stroke","rgba(192,138,90,0.5)");});},t2);
-    var base=t2+3000;
-    T(function(){cap.textContent="Cascade carries the verdict downstream";state.textContent="cascading\u2026";state.className="stage-state";},base-150);
-    nodeEnvs.forEach(function(n,i){
-      T(function(){n.wire.setAttribute("stroke","#EAF6F5");n.wire.style.filter="drop-shadow(0 0 4px rgba(111,224,220,0.8))";n.box.setAttribute("stroke","rgba(63,176,174,0.55)");},base+i*340);
-      T(function(){color(n.env,"#3FB0AE");n.wire.setAttribute("stroke","rgba(63,176,174,0.5)");n.wire.style.filter="none";n.box.setAttribute("stroke","rgba(63,176,174,0.5)");n.box.setAttribute("fill","rgba(63,176,174,0.06)");n.tag.textContent="secured";n.tag.setAttribute("fill","#8FEAE6");n.env._mark.setAttribute("fill","#8FEAE6");n.env._mark.textContent="\u2713";},base+i*340+240);});
-    T(function(){cap.textContent="Every copy now carries the current verdict \u2014 with a record.";state.textContent="all copies secured";state.className="stage-state good";},base+systems.length*340+400);}
-  var played=false;
-  if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&!played){played=true;T(run,400);io.disconnect();}});},{threshold:0.35});io.observe(document.getElementById("stage"));}else run();
-  document.getElementById("replay").addEventListener("click",run);reset();
-})();
-
-(function(){
-  var form=document.getElementById("accessForm"),note=document.getElementById("formNote");
-  if(!form)return;
-  form.addEventListener("submit",function(e){
+  var form = document.getElementById("accessForm"),
+      note = document.getElementById("formNote"),
+      original = note ? note.textContent : "";
+  if(!form || !note) return;
+  form.addEventListener("submit", function(e){
     e.preventDefault();
-    var data=new FormData(form);
-    note.textContent="Sending\u2026";note.style.color="";
-    fetch(form.action,{method:"POST",body:data,headers:{"Accept":"application/json"}})
-      .then(function(r){
-        if(r.ok){form.reset();note.textContent="Thanks \u2014 we\u2019ll be in touch.";note.style.color="#8FEAE6";}
-        else{note.textContent="Something went wrong \u2014 email christopher@cascadesecurity.io directly.";note.style.color="#D9A876";}
-      })
-      .catch(function(){note.textContent="Something went wrong \u2014 email christopher@cascadesecurity.io directly.";note.style.color="#D9A876";});
+    var data = new FormData(form);
+    note.textContent = "Sending…";
+    note.style.color = "";
+    fetch(form.action, {
+      method: "POST",
+      body: data,
+      headers: {"Accept": "application/json"}
+    }).then(function(r){
+      if(r.ok){
+        form.reset();
+        note.textContent = "Thanks — we’ll be in touch.";
+        note.style.color = "var(--good)";
+      } else {
+        note.textContent = "Something went wrong — email christopher@cascadesecurity.io directly.";
+        note.style.color = "var(--warn)";
+      }
+    }).catch(function(){
+      note.textContent = "Something went wrong — email christopher@cascadesecurity.io directly.";
+      note.style.color = "var(--warn)";
+    });
   });
 })();
 </script>
+
 </body>
 </html>
