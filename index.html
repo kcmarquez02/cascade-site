@@ -186,10 +186,10 @@
     <p class="prose">The sequence is ordinary, which is what makes it dangerous. An attacker seeds phishing over weeks. Some of it is caught and pulled. Later they land something real &mdash; bad enough that the mailbox gets restored from backup, or a retention hold reaches back into the archive. That snapshot was taken before the cleanup. So the restore faithfully returns every malicious message the security tool had already removed.</p>
     <p class="prose" style="margin-bottom:40px;">The remediation is undone. Nothing alerts, because nothing was built to watch the restore path &mdash; the backup is doing exactly what it was bought to do. The user opens a message they were already protected from, delivered this time by the recovery tool.</p>
     <div class="steps steps--4">
-      <div class="step"><div class="step-n">01</div><h3>Pulled</h3><p>The verdict flips. The security tool removes the message from the inbox.</p></div>
-      <div class="step"><div class="step-n">02</div><h3>Restored</h3><p>A recovery from backup or archive returns the message: live, unread, clickable.</p></div>
-      <div class="step"><div class="step-n">03</div><h3>Caught</h3><p>Cascade sees the restore and re-checks what came back against every verdict it holds.</p></div>
-      <div class="step"><div class="step-n">04</div><h3>Cleared</h3><p>The reintroduced copy is pulled again, and the action is written to the record.</p></div>
+      <div class="step"><div class="step-n">01 / PULLED</div><h3>The verdict flips</h3><p>The security tool removes the message from the inbox.</p></div>
+      <div class="step"><div class="step-n">02 / RESTORED</div><h3>The backup hands it back</h3><p>A recovery from backup or archive returns the message: live, unread, clickable.</p></div>
+      <div class="step"><div class="step-n">03 / CAUGHT</div><h3>Cascade sees the return</h3><p>It re-checks what came back against every verdict it holds.</p></div>
+      <div class="step"><div class="step-n">04 / CLEARED</div><h3>Pulled again, on the record</h3><p>The reintroduced copy is removed, and the action is written to the disposition record.</p></div>
     </div>
     <p class="prose" style="margin-top:40px;">You can't fix this inside the backup. <strong>Backups are immutable on purpose &mdash; that immutability is the product.</strong> So Cascade doesn't fight the backup. It guards the door the backup opens: watching the restore path, re-evaluating what re-enters against the current verdict, and acting on what shouldn't have come back.</p>
   </section>
